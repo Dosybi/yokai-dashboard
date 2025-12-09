@@ -16,7 +16,7 @@
 
 Проект следует строгому **Feature Sliced Design (FSD)**:
 
-\`\`\`
+```
 src/
 ├── app/ # Next.js App Router
 │ ├── api/spirits/ # API Routes (GET, POST, SSE)
@@ -37,7 +37,7 @@ src/
 └── shared/ # Переиспользуемые модули
 ├── lib/ # ThemeProvider, QueryClientProvider
 └── ui/ # Button, Notification, ThemeToggle
-\`\`\`
+```
 
 ### Разделение ответственности
 
@@ -82,37 +82,29 @@ src/
 
 ### Локально
 
-\`\`\`bash
-
-# Установка зависимостей
-
+```bash
+// Установка зависимостей
 npm install
 
-# Запуск dev сервера
-
+// Запуск dev сервера
 npm run dev
 
-# Открыть браузер
-
+// Открыть браузер
 http://localhost:3000
-\`\`\`
+```
 
 ### Docker
 
-\`\`\`bash
-
-# Запуск (первый раз или после изменений)
-
+```bash
+// Запуск (первый раз или после изменений)
 docker-compose up --build
 
-# Запуск (если образ уже собран)
-
+// Запуск (если образ уже собран)
 docker-compose up
 
-# Остановка
-
+// Остановка
 docker-compose down
-\`\`\`
+```
 
 ## Маршруты
 
@@ -126,31 +118,34 @@ docker-compose down
 Получение списка всех духов (18 духов в mock data).
 
 **Response:**
-\`\`\`json
+
+```json
 {
 "success": true,
 "data": [/_ Spirit[] _/],
 "total": 18
 }
-\`\`\`
+```
 
 ### POST /api/spirits/capture
 
 Поимка духа по ID. **30% вероятность ошибки** для демонстрации error handling.
 
 **Request:**
-\`\`\`json
+
+```json
 { "id": "spirit-001" }
-\`\`\`
+```
 
 **Response (success):**
-\`\`\`json
+
+```json
 {
 "success": true,
 "message": "Spirit captured successfully",
 "data": {/_ Spirit _/}
 }
-\`\`\`
+```
 
 ### GET /api/spirits/stream
 
@@ -162,34 +157,29 @@ Server-Sent Events stream для real-time обновлений уровня у�
 
 ## Разработка
 
-\`\`\`bash
-
-# Форматирование кода
-
+```bash
+// Форматирование кода
 npm run format
 
-# Проверка форматирования
-
+// Проверка форматирования
 npm run format:check
 
-# Линтинг
-
+// Линтинг
 npm run lint
 
-# Production build
-
+// Production build
 npm run build
 npm start
-\`\`\`
+```
 
 ## Структура данных
 
-\`\`\`typescript
+```typescript
 interface Spirit {
-id: string;
-name: string;
-threatLevel: "Low" | "Medium" | "High" | "Critical";
-location: string;
-status: "Active" | "Captured";
+  id: string;
+  name: string;
+  threatLevel: 'Low' | 'Medium' | 'High' | 'Critical';
+  location: string;
+  status: 'Active' | 'Captured';
 }
-\`\`\`
+```
