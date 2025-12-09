@@ -1,36 +1,195 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yokai Dashboard
 
-## Getting Started
+Мониторинг и отлов японских духов йокаев в режиме реального времени.
 
-First, run the development server:
+## Технологии
 
-```bash
+- **Next.js 16** (App Router)
+- **React 19**
+- **TypeScript 5**
+- **TanStack Query**
+- **Zod**
+- **SCSS Modules**
+- **Server-Sent Events (SSE)**
+
+## Архитектура
+
+Проект следует строгому **Feature Sliced Design (FSD)**:
+
+\`\`\`
+src/
+├── app/ # Next.js App Router
+│ ├── api/spirits/ # API Routes (GET, POST, SSE)
+│ ├── monitoring/ # Monitoring page
+│ └── layout.tsx # Root layout
+├── entities/ # Бизнес-сущности (данные)
+│ └── spirit/
+│ ├── api/ # useSpiritsQuery, useSpiritsSSE
+│ ├── model/ # Types, Zod schemas
+│ └── ui/ # SpiritCard, ThreatBadge, StatusBadge
+├── features/ # Пользовательские сценарии (действия)
+│ └── spirit-capture/
+│ ├── model/ # useCaptureSpirit (mutation + optimistic updates)
+│ └── ui/ # CaptureButton
+├── widgets/ # Композиция entities + features
+│ └── spirit-monitoring/
+│ └── ui/ # SpiritList, SpiritGrid, SpiritStats
+└── shared/ # Переиспользуемые модули
+├── lib/ # ThemeProvider, QueryClientProvider
+└── ui/ # Button, Notification, ThemeToggle
+\`\`\`
+
+### Разделение ответственности
+
+- **entities** — чистые данные и UI без бизнес-логики
+- **features** — изолированные пользовательские сценарии (capture, mutations)
+- **widgets** — композиция entities + features для экранов
+- **shared** — переиспользуемые компоненты и утилиты
+
+## Ключевые функции
+
+### ✅ Optimistic Updates
+
+- Мгновенное обновление UI при поимке духа (`features/spirit-capture`)
+- Автоматический откат при ошибке с уведомлением
+- TanStack Query: `onMutate` → optimistic update, `onError` → rollback
+
+### ✅ Server-Sent Events (SSE)
+
+- Real-time обновления уровня угрозы активных духов
+- Каждые 5 секунд случайный Active дух меняет `threatLevel`
+- EventSource API (`entities/spirit/api/useSpiritsSSE`)
+- Captured духи не получают обновления (фильтр на сервере)
+
+### ✅ Zod валидация
+
+- Все API responses валидируются через схемы
+- Request body validation на сервере
+- Type-safe данные из схем (`spiritSchema`)
+
+### ✅ Темная и светлая темы
+
+- Переключение через `ThemeToggle`
+- CSS-переменные + localStorage
+- Поддержка системных предпочтений
+
+### ✅ SCSS Modules
+
+- Модульные стили с градиентами для уровней угрозы
+- Адаптивный дизайн
+
+## Установка и запуск
+
+### Локально
+
+\`\`\`bash
+
+# Установка зависимостей
+
+npm install
+
+# Запуск dev сервера
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Открыть браузер
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+http://localhost:3000
+\`\`\`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Docker
 
-## Learn More
+\`\`\`bash
 
-To learn more about Next.js, take a look at the following resources:
+# Запуск (первый раз или после изменений)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+docker-compose up --build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Запуск (если образ уже собран)
 
-## Deploy on Vercel
+docker-compose up
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Остановка
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+docker-compose down
+\`\`\`
+
+## Маршруты
+
+- \`/\` - Главная страница (приветствие)
+- \`/monitoring\` - Мониторинг духов с real-time обновлениями
+
+## API Endpoints
+
+### GET /api/spirits
+
+Получение списка всех духов (18 духов в mock data).
+
+**Response:**
+\`\`\`json
+{
+"success": true,
+"data": [/_ Spirit[] _/],
+"total": 18
+}
+\`\`\`
+
+### POST /api/spirits/capture
+
+Поимка духа по ID. **30% вероятность ошибки** для демонстрации error handling.
+
+**Request:**
+\`\`\`json
+{ "id": "spirit-001" }
+\`\`\`
+
+**Response (success):**
+\`\`\`json
+{
+"success": true,
+"message": "Spirit captured successfully",
+"data": {/_ Spirit _/}
+}
+\`\`\`
+
+### GET /api/spirits/stream
+
+Server-Sent Events stream для real-time обновлений уровня угрозы.
+
+- Обновления каждые 5 секунд
+- Только для Active духов (Captured исключены)
+- Формат: `data: {"id": "...", "threatLevel": "High"}`
+
+## Разработка
+
+\`\`\`bash
+
+# Форматирование кода
+
+npm run format
+
+# Проверка форматирования
+
+npm run format:check
+
+# Линтинг
+
+npm run lint
+
+# Production build
+
+npm run build
+npm start
+\`\`\`
+
+## Структура данных
+
+\`\`\`typescript
+interface Spirit {
+id: string;
+name: string;
+threatLevel: "Low" | "Medium" | "High" | "Critical";
+location: string;
+status: "Active" | "Captured";
+}
+\`\`\`
